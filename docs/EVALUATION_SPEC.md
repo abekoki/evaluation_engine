@@ -1,11 +1,12 @@
 # drowsy_detection 評価エンジン 仕様書（更新版）
 
-最終更新: 2025-08-25 (JST)
+最終更新: 2025-08-26 (JST)
 
 ## 更新履歴
 
 | 日付 | バージョン | 変更内容 |
 |------|------------|----------|
+| 2025-08-26 | 3.0.0 | **マークダウンレポート機能追加**<br>• 評価結果の可視化マークダウンレポート自動生成<br>• バージョン管理システムの改善（動的バージョニング）<br>• データベース登録時の相対パス問題修正<br>• drowsy_detection v0.1.1対応<br>• 包括的なドキュメント更新 |
 | 2025-08-25 | 2.0.0 | 仕様書修正内容に基づく大幅改訂<br>• パス参照の削除（具体的なディレクトリパスを削除）<br>• database.dbのconfig化対応<br>• 出力形式の変更（summary.csv → JSON/YAML形式）<br>• 相対パスでの管理に変更 |
 | 2025-08-22 | 1.0.0 | 初版作成<br>• 評価エンジンの基本仕様<br>• 実行フローと評価ロジック<br>• 生成物の定義 |
 
@@ -28,8 +29,11 @@
   - 入力: `InputData(frame_num, left_eye_open, right_eye_open, face_confidence)`
   - 出力: `OutputData(is_drowsy, frame_num, left_eye_closed, right_eye_closed, continuous_time, error_code)`
   - 設定: `Config` を使用。`set_frame_rate(30.0)` を呼ぶ。
-  - バージョン: パッケージの `__version__`
-  - Gitハッシュ: 指定GitHubリポジトリの `git rev-parse HEAD` により取得
+  - バージョン: パッケージの `__version__` + 動的バージョニング
+    - **動的バージョニング**: コミットハッシュベースでバージョンを動的生成
+    - フォーマット: `{base_version}+{commit_hash[:8]}`（例: `0.1.1+fa5172ba`）
+    - 新しいコミットが検出された場合、自動的にマイナーバージョンを更新
+  - Gitハッシュ: 指定GitHubリポジトリの `git ls-remote HEAD` により最新コミット取得
 - DataWareHouse（Python API）
   - 例: `list_core_lib_outputs(video_id=...)`, `get_video_tags(video_id)`, `create_algorithm_version(...)`, `create_algorithm_output(...)`
 
@@ -64,6 +68,15 @@ uv pip install git+https://github.com/abekoki/drowsy_detection.git@v0.1.0
        - 各ビデオデータ評価結果へのリンク（パス）
    - `{video_id}.csv`（動画ごとの明細。ファイル名は `video_id`）
      - 列: `task_id,predicted,ground_truth,correct,notes`
+   - **評価レポート（Markdown形式）** ⭐NEW⭐
+     - ファイル名: `evaluation_report.md`
+     - 人間が読みやすい可視化レポート
+     - 内容:
+       - 実行情報（日時、バージョン、コミットハッシュ）
+       - 全体評価結果（正解率、評価ステータス）
+       - ビデオ別評価結果（テーブル形式）
+       - アルゴリズム検出統計（検出率、進捗バー）
+       - 詳細結果（タスク別の予測・正解判定）
    - DataWareHouse 登録（評価結果のメタ登録）:
      - 方式: `datawarehouse.algorithm_api.create_algorithm_output(algorithm_id, core_lib_output_id, output_dir)` を準用
      - 運用: 評価結果のフォルダを `output_dir` として、各 `core_lib_output_id` と紐付けて登録

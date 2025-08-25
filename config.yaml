@@ -1,0 +1,21 @@
+# 評価エンジン設定ファイル
+# 作成日: 2025-08-25
+
+# DataWareHouse設定
+datawarehouse:
+  database_path: "../DataWareHouse/database.db"
+  
+# 出力設定
+output:
+  base_dir: "../DataWareHouse/03_algorithm_output"
+  evaluation_dir: "../DataWareHouse/04_evaluation_output"
+  
+# アルゴリズム設定
+algorithm:
+  frame_rate: 30.0
+  git_repo: "https://github.com/abekoki/drowsy_detection.git"
+  
+# ログ設定
+logging:
+  level: "INFO"
+  file: "log.md"
