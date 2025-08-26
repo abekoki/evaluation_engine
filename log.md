@@ -94,3 +94,27 @@
   - アルゴリズム出力: `..\DataWareHouse\03_algorithm_output\v0.1.1+fa5172ba\20250826-134236`
   - 評価結果: `..\DataWareHouse\04_evaluation_output\v0.1.1+fa5172ba\20250826-134236`
 
+---
+
+## 実装メモ - 評価結果のDB登録機能追加
+
+- 日時: 2025-08-26
+- 内容: `main.py` に評価結果のDB登録処理を追加。
+  - 集計: `create_evaluation_result(version, algorithm_id, true_positive, false_positive=None, evaluation_result_dir, evaluation_timestamp)`
+  - 明細: `create_evaluation_data(evaluation_result_id, algorithm_output_id, correct_task_num, total_task_num, evaluation_data_path)`
+- 仕様: false_positive は暫定 None。timestamp は ISO8601。
+
+
+## 評価実行ログ - 20250826-155036
+
+- **実行日時**: 2025-08-26 15:50:37
+- **対象件数**: 4動画
+- **全体正解率**: 0.450 (9/20)
+- **アルゴリズムバージョン**: 0.1.1+fa5172ba
+- **アルゴリズムハッシュ**: fa5172ba38c962bee864e7a53f08cbe9f9651370
+- **出力先**: 
+  - アルゴリズム出力: `..\DataWareHouse\03_algorithm_output\v0.1.1+fa5172ba\20250826-155036`
+  - 評価結果: `..\DataWareHouse\04_evaluation_output\v0.1.1+fa5172ba\20250826-155036`
+
+- **評価結果DB登録**: 明細 4件, evaluation_result_ID=3
+

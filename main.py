@@ -47,6 +47,8 @@ class EvaluationEngine:
         self.algorithm_commit_hash = self._get_algorithm_commit_hash()
         # バージョンをコミットハッシュベースで動的生成
         self.algorithm_version = self._get_dynamic_version(drowsy_detection.__version__, self.algorithm_commit_hash)
+        # アルゴリズムID（登録後に保持し、評価登録で使用）
+        self.algorithm_id: Optional[int] = None
         
         print(f"[{self.run_id}] 評価エンジン初期化完了")
         print(f"  Database: {self.db_path}")
@@ -109,8 +111,11 @@ class EvaluationEngine:
             # 4. 評価
             evaluation_results = self._run_evaluation_logic(algorithm_results)
             
-            # 5. ログ出力
-            self._write_log(evaluation_results)
+            # 5. 評価結果をDBへ登録（新API対応）
+            register_summary = self._register_evaluation_to_db(algorithm_results, evaluation_results)
+            
+            # 6. ログ出力
+            self._write_log(evaluation_results, register_summary)
             
             print(f"\n[{self.run_id}] 評価完了")
             return True
@@ -180,6 +185,8 @@ class EvaluationEngine:
             else:
                 print(f"  エラー: 既存のアルゴリズムが見つかりません")
                 return []
+        # 後続の評価登録で使用するため保持
+        self.algorithm_id = algorithm_id
         
         for core_output in core_outputs:
             try:
@@ -398,6 +405,75 @@ class EvaluationEngine:
         print(f"    マークダウンレポート保存: {markdown_path}")
         
         return evaluation_summary
+
+    def _register_evaluation_to_db(self, algorithm_results: List[Dict[str, Any]], evaluation_summary: Dict[str, Any]) -> Dict[str, Any]:
+        """評価結果をDataWareHouseに登録（集計＋明細）
+        Returns: { 'evaluation_result_id': int or None, 'num_evaluation_data': int }
+        """
+        summary = evaluation_summary.get('evaluation_summary', {})
+        overall = summary.get('overall_results', {})
+        per_dataset = summary.get('per_dataset', [])
+
+        if not self.algorithm_id:
+            print(f"[{self.run_id}] 評価結果登録スキップ: algorithm_id 未確定")
+            return { 'evaluation_result_id': None, 'num_evaluation_data': 0 }
+
+        # 評価結果ディレクトリの相対パス化
+        db_dir = Path(self.db_path).parent.resolve()
+        try:
+            eval_dir_relative = str(self.evaluation_output_dir.resolve().relative_to(db_dir))
+        except Exception:
+            # 既に相対の場合など
+            eval_dir_relative = str(self.evaluation_output_dir)
+
+        # 集計レコードの登録（false_positive は暫定 None）
+        try:
+            evaluation_result_id = dwh.create_evaluation_result(
+                version=self.algorithm_version,
+                algorithm_id=self.algorithm_id,
+                true_positive=float(overall.get('accuracy', 0.0)),
+                false_positive=None,
+                evaluation_result_dir=eval_dir_relative,
+                evaluation_timestamp=datetime.now().isoformat(),
+                db_path=self.db_path,
+            )
+            print(f"[{self.run_id}] 評価集計登録: evaluation_result_ID={evaluation_result_id}")
+        except Exception as e:
+            print(f"[{self.run_id}] 評価集計登録エラー: {e}")
+            return { 'evaluation_result_id': None, 'num_evaluation_data': 0 }
+
+        # 動画ごとの明細登録のために、video_id -> (num_correct, num_tasks, result_file_path) を用意
+        dataset_index = { d['video_id']: d for d in per_dataset }
+
+        created_count = 0
+        for result in algorithm_results:
+            video_id = result['video_id']
+            algorithm_output_id = result['algorithm_output_id']
+            ds = dataset_index.get(video_id)
+            if not ds:
+                # 評価対象外（タグ無し等）の場合スキップ
+                continue
+
+            correct = int(ds.get('num_correct', 0))
+            total = int(ds.get('num_tasks', 0))
+            result_file = ds.get('result_file_path', f"{video_id}.csv")
+            evaluation_data_path = str(Path(eval_dir_relative) / result_file)
+
+            try:
+                dwh.create_evaluation_data(
+                    evaluation_result_id=evaluation_result_id,
+                    algorithm_output_id=algorithm_output_id,
+                    correct_task_num=correct,
+                    total_task_num=total,
+                    evaluation_data_path=evaluation_data_path,
+                    db_path=self.db_path,
+                )
+                created_count += 1
+            except Exception as e:
+                print(f"[{self.run_id}] 評価明細登録エラー (video_ID={video_id}): {e}")
+
+        print(f"[{self.run_id}] 評価明細登録完了: {created_count}件")
+        return { 'evaluation_result_id': evaluation_result_id, 'num_evaluation_data': created_count }
     
     def _generate_markdown_report(self, evaluation_summary: Dict[str, Any], evaluation_results: List[Dict[str, Any]]) -> str:
         """マークダウン形式の評価レポートを生成"""
@@ -529,7 +605,7 @@ class EvaluationEngine:
         
         return str(markdown_path)
     
-    def _write_log(self, evaluation_results: Dict[str, Any]):
+    def _write_log(self, evaluation_results: Dict[str, Any], register_summary: Optional[Dict[str, Any]] = None):
         """ログファイルの更新"""
         log_file = self.config['logging']['file']
         
@@ -547,6 +623,13 @@ class EvaluationEngine:
   - 評価結果: `{self.evaluation_output_dir}`
 
 """
+
+        # 評価結果DB登録サマリを追記（あれば）
+        if register_summary and register_summary.get('evaluation_result_id') is not None:
+            log_entry += (
+                f"- **評価結果DB登録**: 明細 {register_summary.get('num_evaluation_data', 0)}件, "
+                f"evaluation_result_ID={register_summary.get('evaluation_result_id')}\n\n"
+            )
         
         try:
             with open(log_file, 'a', encoding='utf-8') as f:
