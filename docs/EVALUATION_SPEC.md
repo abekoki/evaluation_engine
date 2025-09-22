@@ -1,12 +1,12 @@
 # drowsy_detection 評価エンジン 仕様書（更新版）
 
-最終更新: 2025-08-26 (JST)
+最終更新: 2025-09-22 (JST)
 
 ## 更新履歴
 
 | 日付 | バージョン | 変更内容 |
 |------|------------|----------|
-| 2025-08-26 | 3.0.0 | **マークダウンレポート機能追加**<br>• 評価結果の可視化マークダウンレポート自動生成<br>• バージョン管理システムの改善（動的バージョニング）<br>• データベース登録時の相対パス問題修正<br>• drowsy_detection v0.1.1対応<br>• 包括的なドキュメント更新 |
+| 2025-09-22 | 3.0.2 | **drowsy_detection自動更新機能追加**<br>• 評価実行前に最新版チェック・自動更新<br>• GitHubリポジトリから最新コミット確認<br>• 更新時はモジュール再読込とバージョン更新<br>• README・仕様書更新 |
 | 2025-08-25 | 2.0.0 | 仕様書修正内容に基づく大幅改訂<br>• パス参照の削除（具体的なディレクトリパスを削除）<br>• database.dbのconfig化対応<br>• 出力形式の変更（summary.csv → JSON/YAML形式）<br>• 相対パスでの管理に変更 |
 | 2025-08-22 | 1.0.0 | 初版作成<br>• 評価エンジンの基本仕様<br>• 実行フローと評価ロジック<br>• 生成物の定義 |
 
@@ -95,6 +95,7 @@ uv pip install git+https://github.com/abekoki/drowsy_detection.git@v0.1.0
    - `run_id` 発行（例: YYYYMMDD-HHMMSS）
    - 出力先: DataWareHouseのdatabase.dbに相対パスで登録
    - アルゴリズム `__version__` と `git rev-parse HEAD` を取得
+   - **drowsy_detection最新版チェック**: リモートリポジトリから最新コミットを確認・自動更新
 2) 対象データ取得
    - DataWareHouseからコアライブラリ出力対象の `core_lib_output` レコードを列挙
    - 対応する動画IDごとに `core_lib_output_dir` からCSVを取得

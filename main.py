@@ -15,11 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
-# DataWareHouseパッケージのパスを追加
-dwh_path = Path("../DataWareHouse")
-if dwh_path.exists():
-    sys.path.insert(0, str(dwh_path))
-
+# DataWareHouseパッケージのインポート
 import datawarehouse as dwh
 from drowsy_detection import DrowsyDetector, InputData, OutputData, Config
 import drowsy_detection
@@ -45,7 +41,7 @@ class EvaluationEngine:
         
         # アルゴリズム情報の取得
         self.algorithm_commit_hash = self._get_algorithm_commit_hash()
-        # バージョンをコミットハッシュベースで動的生成
+        # drowsy_detectionのバージョンをコミットハッシュで動的生成
         self.algorithm_version = self._get_dynamic_version(drowsy_detection.__version__, self.algorithm_commit_hash)
         # アルゴリズムID（登録後に保持し、評価登録で使用）
         self.algorithm_id: Optional[int] = None
@@ -79,7 +75,64 @@ class EvaluationEngine:
                 return "unknown"
         except Exception:
             return "unknown"
-    
+
+    def _check_and_update_algorithm(self) -> str:
+        """drowsy_detectionの最新版を確認・更新し、新しいコミットハッシュを返す"""
+        try:
+            print(f"[{self.run_id}] drowsy_detectionの更新チェック中...")
+
+            # リモートリポジトリの最新コミットハッシュを取得
+            result = subprocess.run(
+                ["git", "ls-remote", self.config['algorithm']['git_repo'], "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode != 0:
+                print(f"[{self.run_id}] リモートコミット取得失敗、現在のバージョンを使用")
+                return self.algorithm_commit_hash
+
+            remote_commit = result.stdout.strip().split('\t')[0]
+
+            # 現在のコミットハッシュと比較
+            if remote_commit == self.algorithm_commit_hash:
+                print(f"[{self.run_id}] drowsy_detectionは最新版です (commit: {remote_commit[:8]})")
+                return remote_commit
+
+            # 新しいコミットがある場合、更新を試行
+            print(f"[{self.run_id}] 新しいコミットが見つかりました: {remote_commit[:8]} (現在: {self.algorithm_commit_hash[:8]})")
+            print(f"[{self.run_id}] drowsy_detectionを更新中...")
+
+            # pip installで最新版をインストール
+            install_result = subprocess.run(
+                ["uv", "pip", "install", f"git+{self.config['algorithm']['git_repo']}", "--quiet"],
+                capture_output=True,
+                text=True,
+                timeout=300  # 5分タイムアウト
+            )
+
+            if install_result.returncode == 0:
+                print(f"[{self.run_id}] drowsy_detection更新完了")
+                # モジュールをリロードして新しいバージョンを反映
+                import importlib
+                importlib.reload(drowsy_detection)
+
+                # 新しいバージョンを取得してインスタンス変数を更新
+                new_version = drowsy_detection.__version__
+                self.algorithm_version = self._get_dynamic_version(new_version, remote_commit)
+                self.algorithm_commit_hash = remote_commit
+
+                print(f"[{self.run_id}] バージョン更新: {self.algorithm_version}")
+                return remote_commit
+            else:
+                print(f"[{self.run_id}] 更新失敗、使用可能な最新コミットを使用: {remote_commit[:8]}")
+                return remote_commit
+
+        except Exception as e:
+            print(f"[{self.run_id}] drowsy_detection更新チェックエラー: {e}")
+            return self.algorithm_commit_hash
+
     def _get_dynamic_version(self, base_version: str, commit_hash: str) -> str:
         """コミットハッシュベースで動的バージョンを生成"""
         if commit_hash == "unknown" or not commit_hash:
@@ -129,7 +182,10 @@ class EvaluationEngine:
     def _prepare_execution(self):
         """実行準備"""
         print(f"[{self.run_id}] 実行準備中...")
-        
+
+        # drowsy_detectionの最新版チェックと更新
+        self._check_and_update_algorithm()
+
         # 出力ディレクトリの作成
         version_dir = self.output_base_dir / f"v{self.algorithm_version}"
         self.run_output_dir = version_dir / self.run_id

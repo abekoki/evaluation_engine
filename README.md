@@ -1,7 +1,7 @@
 # drowsy_detection 評価エンジン
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-green.svg)
+![Version](https://img.shields.io/badge/version-3.0.2-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-orange.svg)
 
 drowsy_detectionアルゴリズムの性能評価を自動化するエンジンです。
@@ -14,6 +14,7 @@ GitHub上の`abekoki/drowsy_detection`パッケージを使用して、コアラ
 
 ### 🔄 アルゴリズム評価
 - GitHubパッケージの自動インストールと実行
+- **最新版自動更新**: 評価実行前にdrowsy_detectionの最新版をチェック・更新
 - フレーム単位でのリアルタイム居眠り検出
 - DataWareHouseとの完全統合
 
@@ -31,21 +32,21 @@ GitHub上の`abekoki/drowsy_detection`パッケージを使用して、コアラ
 ## 🚀 クイックスタート
 
 ### 前提条件
-- Python 3.8+
+- Python 3.10+
 - uv (Python package manager)
-- DataWareHouse環境
+- DataWareHouseデータベース
 
 ### インストール
 ```bash
-# 仮想環境の作成
+# 仮想環境の作成と依存関係のインストール
 uv venv
-
-# 依存関係のインストール
-uv pip install -r requirements.txt
+uv sync
 
 # drowsy_detectionアルゴリズムのインストール
 uv pip install git+https://github.com/abekoki/drowsy_detection.git
 ```
+
+**📦 DataWareHouse統合**: `uv sync`で自動的にDataWareHouseパッケージがインストールされます。
 
 ### 実行
 ```bash
@@ -100,12 +101,13 @@ evaluation_engine/
 
 ## 🔄 ワークフロー
 
-1. **データ取得**: DataWareHouseからコアライブラリ出力を取得
-2. **アルゴリズム実行**: drowsy_detectionでフレーム単位判定
-3. **結果保存**: CSV形式でアルゴリズム出力を保存
-4. **評価実行**: タグ区間に基づく正誤判定
-5. **レポート生成**: JSON + Markdownでの結果出力
-6. **データベース登録**: DataWareHouseへの結果登録
+1. **最新版チェック**: drowsy_detectionのGitHubリポジトリから最新コミットをチェック・自動更新
+2. **データ取得**: DataWareHouseからコアライブラリ出力を取得
+3. **アルゴリズム実行**: drowsy_detectionでフレーム単位判定
+4. **結果保存**: CSV形式でアルゴリズム出力を保存
+5. **評価実行**: タグ区間に基づく正誤判定
+6. **レポート生成**: JSON + Markdownでの結果出力
+7. **データベース登録**: DataWareHouseへの結果登録
 
 ## 📊 評価指標
 
@@ -115,10 +117,11 @@ evaluation_engine/
 
 ## 🛠️ 技術仕様
 
-- **言語**: Python 3.8+
+- **言語**: Python 3.10+
 - **パッケージ管理**: uv
 - **アルゴリズム**: drowsy_detection (GitHub)
-- **データベース**: DataWareHouse SQLite
+- **データベース**: DataWareHouse SQLite (pipパッケージ)
+- **DataWareHouse**: v0.1.0 (remake_pip_lib)
 - **設定**: YAML
 - **出力**: CSV, JSON, Markdown
 
@@ -142,8 +145,9 @@ MIT License
 
 ## 🏷️ バージョン
 
-現在のバージョン: **3.0.0**
+現在のバージョン: **3.0.2**
 
+- **drowsy_detection自動更新機能追加** ⭐NEW⭐
 - マークダウンレポート機能追加
 - 動的バージョニング対応
 - drowsy_detection v0.1.1対応

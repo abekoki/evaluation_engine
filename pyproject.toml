@@ -1,10 +1,11 @@
 [project]
 name = "evaluation-engine"
-version = "3.0.0"
+version = "3.0.2"
 description = "drowsy_detection algorithm evaluation engine with markdown reporting"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "pandas>=2.3.2",
     "pyyaml>=6.0.2",
+    "datawarehouse @ git+https://github.com/abekoki/DataWareHouse.git@remake_pip_lib",
 ]

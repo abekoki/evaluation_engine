@@ -104,6 +104,32 @@
   - 明細: `create_evaluation_data(evaluation_result_id, algorithm_output_id, correct_task_num, total_task_num, evaluation_data_path)`
 - 仕様: false_positive は暫定 None。timestamp は ISO8601。
 
+---
+
+## DataWareHouse pipパッケージ統合完了
+
+- 日時: 2025-09-22
+- 内容: DataWareHouseをremake_pip_libブランチのpipパッケージとして統合
+  - パッケージインストール: `uv sync` で自動インストール
+  - import変更: ローカルパス参照から標準importへ
+  - Pythonバージョン: 3.10+ へ更新 (DataWareHouse要件)
+  - ドキュメント更新: README.md, EVALUATION_SPEC.md, pyproject.toml
+- テスト結果:
+  - アルゴリズム出力DB登録: ✅ (algorithm_output_ID=41,42)
+  - 評価結果DB登録: ✅ (evaluation_result_ID=6, 明細4件)
+  - 全体正解率: 45.0% (9/20タスク)
+
+---
+
+## drowsy_detection自動更新機能追加
+
+- 日時: 2025-09-22
+- 内容: 評価実行前にdrowsy_detectionの最新版チェックと自動更新機能を追加
+  - 新規メソッド: `_check_and_update_algorithm()` - リモートコミット確認・自動更新
+  - 実行フロー: 初期化時コミット取得 → 評価実行前に最新版チェック → 更新時はモジュール再読込
+  - 更新条件: リモートコミット ≠ 現在コミットの場合に自動更新
+  - 結果: 最新版チェックが正常に動作することを確認（今回の実行では更新なし）
+
 
 ## 評価実行ログ - 20250826-155036
 
@@ -117,4 +143,46 @@
   - 評価結果: `..\DataWareHouse\04_evaluation_output\v0.1.1+fa5172ba\20250826-155036`
 
 - **評価結果DB登録**: 明細 4件, evaluation_result_ID=3
+
+
+## 評価実行ログ - 20250922-131745
+
+- **実行日時**: 2025-09-22 13:17:47
+- **対象件数**: 4動画
+- **全体正解率**: 0.450 (9/20)
+- **アルゴリズムバージョン**: 0.1.1+fa5172ba
+- **アルゴリズムハッシュ**: fa5172ba38c962bee864e7a53f08cbe9f9651370
+- **出力先**: 
+  - アルゴリズム出力: `..\DataWareHouse\03_algorithm_output\v0.1.1+fa5172ba\20250922-131745`
+  - 評価結果: `..\DataWareHouse\04_evaluation_output\v0.1.1+fa5172ba\20250922-131745`
+
+- **評価結果DB登録**: 明細 4件, evaluation_result_ID=6
+
+
+## 評価実行ログ - 20250922-132412
+
+- **実行日時**: 2025-09-22 13:24:13
+- **対象件数**: 4動画
+- **全体正解率**: 0.450 (9/20)
+- **アルゴリズムバージョン**: 3.0.0+fa5172ba
+- **アルゴリズムハッシュ**: fa5172ba38c962bee864e7a53f08cbe9f9651370
+- **出力先**: 
+  - アルゴリズム出力: `..\DataWareHouse\03_algorithm_output\v3.0.0+fa5172ba\20250922-132412`
+  - 評価結果: `..\DataWareHouse\04_evaluation_output\v3.0.0+fa5172ba\20250922-132412`
+
+- **評価結果DB登録**: 明細 4件, evaluation_result_ID=7
+
+
+## 評価実行ログ - 20250922-133204
+
+- **実行日時**: 2025-09-22 13:32:06
+- **対象件数**: 4動画
+- **全体正解率**: 0.450 (9/20)
+- **アルゴリズムバージョン**: 0.1.1+fa5172ba
+- **アルゴリズムハッシュ**: fa5172ba38c962bee864e7a53f08cbe9f9651370
+- **出力先**: 
+  - アルゴリズム出力: `..\DataWareHouse\03_algorithm_output\v0.1.1+fa5172ba\20250922-133204`
+  - 評価結果: `..\DataWareHouse\04_evaluation_output\v0.1.1+fa5172ba\20250922-133204`
+
+- **評価結果DB登録**: 明細 4件, evaluation_result_ID=8
 

@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2025-09-22
+
+### 🎉 Added
+- **drowsy_detection自動更新機能**: 評価実行前の最新版チェック・自動更新
+  - GitHubリポジトリから最新コミット確認
+  - 新しいコミットがある場合の自動pip install
+  - モジュール再読込による即時反映
+  - バージョン情報の動的更新
+
+### 🚀 Improved
+- **実行準備プロセスの強化**:
+  - アルゴリズム更新チェックの実行準備フェーズへの統合
+  - 更新時の詳細なログ出力
+  - エラーハンドリングの改善
+
+### 📚 Documentation
+- READMEの機能説明更新
+- 仕様書の実行フロー更新
+- ワークフロー図の更新
+
+## [3.0.1] - 2025-09-22
+
+### 🔧 Fixed
+- **DataWareHouse pipパッケージ対応**:
+  - remake_pip_libブランチの正式対応
+  - uv syncでの自動インストール
+  - ローカルパス参照の除去
+
 ## [3.0.0] - 2025-08-26
 
 ### 🎉 Added
