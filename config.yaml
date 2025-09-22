@@ -3,12 +3,12 @@
 
 # DataWareHouse設定
 datawarehouse:
-  database_path: "../DataWareHouse/database.db"
+  database_path: "../development_datas/database.db"
   
 # 出力設定
 output:
-  base_dir: "../DataWareHouse/03_algorithm_output"
-  evaluation_dir: "../DataWareHouse/04_evaluation_output"
+  base_dir: "../development_datas/03_algorithm_output"
+  evaluation_dir: "../development_datas/04_evaluation_output"
   
 # アルゴリズム設定
 algorithm:
